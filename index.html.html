@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoheKapp - Nutikas Külmkapp ja Retseptigeneraator</title>
+    <!-- Tailwind CSS stiilide jaoks -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- React ja ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel JSX transpileerimiseks -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        function App() {
+            const [activeTab, setActiveTab] = React.useState('fridge');
+            
+            // Külmkapi tooted
+            const [items, setItems] = React.useState([
+                { id: 1, name: 'Hakkliha 400g', category: 'Liha', expiry: '2026-06-05', status: 'warning' },
+                { id: 2, name: 'Kodujuust 380g', category: 'Piimatooted', expiry: '2026-06-07', status: 'fresh' },
+                { id: 3, name: 'Tomatid 500g', category: 'Köögiviljad', expiry: '2026-06-04', status: 'danger' },
+                { id: 4, name: 'Piim 2.5%', category: 'Piimatooted', expiry: '2026-06-09', status: 'fresh' }
+            ]);
+
+            const [newName, setNewName] = React.useState('');
+            const [newCategory, setNewCategory] = React.useState('Piimatooted');
+            const [newExpiry, setNewExpiry] = React.useState('');
+
+            // Retsepti state
+            const [recipe, setRecipe] = React.useState(null);
+            const [loadingRecipe, setLoadingRecipe] = React.useState(false);
+
+            const addItem = (e) => {
+                e.preventDefault();
+                if (!newName || !newExpiry) return;
+                
+                const newItem = {
+                    id: Date.now(),
+                    name: newName,
+                    category: newCategory,
+                    expiry: newExpiry,
+                    status: 'fresh'
+                };
+                setItems([...items, newItem]);
+                setNewName('');
+                setNewExpiry('');
+            };
+
+            const deleteItem = (id) => {
+                setItems(items.filter(item => item.id !== id));
+            };
+
+            const generateRecipe = () => {
+                setLoadingRecipe(true);
+                setTimeout(() => {
+                    setRecipe({
+                        title: "Kiire ja maitsev hakkliha-köögiviljapann",
+                        time: "15 minutit",
+                        ingredients: ["Hakkliha 400g", "Tomatid 500g", "Maitseained"],
+                        steps: [
+                            "Pruunista hakkliha pannil koos lemmikmaitseainetega.",
+                            "Tükelda tomatid ja lisa pannile.",
+                            "Hauta keskmisel kuumusel 10 minutit ja serveeri!"
+                        ]
+                    });
+                    setLoadingRecipe(false);
+                }, 1000);
+            };
+
+            return (
+                <div className="max-w-md mx-auto min-h-screen bg-white shadow-xl flex flex-col justify-between">
+                    {/* Päis */}
+                    <header className="bg-emerald-600 text-white p-4 shadow-md">
+                        <h1 className="text-xl font-bold flex items-center gap-2">
+                            🥬 RoheKapp
+                        </h1>
+                        <p className="text-xs text-emerald-100">Sinu nutikas külmkapp ja toidukao päästja</p>
+                    </header>
+
+                    {/* Sisu */}
+                    <main className="p-4 flex-1 overflow-y-auto mb-16">
+                        {activeTab === 'fridge' && (
+                            <div>
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="font-semibold text-lg">Külmkapi sisu</h2>
+                                    <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full font-medium">{items.length} toodet</span>
+                                </div>
+
+                                {/* Uue toote lisamise vorm */}
+                                <form onSubmit={addItem} className="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-4 space-y-2">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Toote nimi (nt Või)" 
+                                        value={newName} 
+                                        onChange={(e) => setNewName(e.target.value)}
+                                        className="w-full p-2 border rounded text-sm bg-white"
+                                    />
+                                    <div className="flex gap-2">
+                                        <select 
+                                            value={newCategory} 
+                                            onChange={(e) => setNewCategory(e.target.value)}
+                                            className="w-1/2 p-2 border rounded text-sm bg-white"
+                                        >
+                                            <option value="Piimatooted">Piimatooted</option>
+                                            <option value="Liha">Liha</option>
+                                            <option value="Köögiviljad">Köögiviljad</option>
+                                            <option value="MuU">Muu</option>
+                                        </select>
+                                        <input 
+                                            type="date" 
+                                            value={newExpiry} 
+                                            onChange={(e) => setNewExpiry(e.target.value)}
+                                            className="w-1/2 p-2 border rounded text-sm bg-white"
+                                        />
+                                    </div>
+                                    <button type="submit" className="w-full bg-emerald-600 text-white py-2 rounded font-medium text-sm hover:bg-emerald-700 transition">
+                                        Lisa külmkappi
+                                    </button>
+                                </form>
+
+                                {/* Toodete nimekiri */}
+                                <div className="space-y-2">
+                                    {items.map(item => (
+                                        <div key={item.id} className="flex justify-between items-center p-3 border rounded-xl bg-white shadow-xs">
+                                            <div>
+                                                <div className="font-medium text-sm">{item.name}</div>
+                                                <div className="text-xs text-slate-500">Aegub: {item.expiry}</div>
+                                            </div>
+                                            <button onClick={() => deleteItem(item.id)} className="text-red-500 text-xs hover:underline">
+                                                Tarbitud
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'recipes' && (
+                            <div>
+                                <h2 className="font-semibold text-lg mb-2">AI Retseptigeneraator</h2>
+                                <p className="text-xs text-slate-500 mb-4">Loo roog külmkapis olevatest jääkidest!</p>
+                                
+                                <button 
+                                    onClick={generateRecipe} 
+                                    disabled={loadingRecipe}
+                                    className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition shadow-sm mb-4"
+                                >
+                                    {loadingRecipe ? "AI mõtleb..." : "✨ Mida täna süüa teha?"}
+                                </button>
+
+                                {recipe && (
+                                    <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl space-y-3">
+                                        <h3 className="font-bold text-indigo-900">{recipe.title}</h3>
+                                        <p className="text-xs text-indigo-700">⏱️ Valmistusaeg: {recipe.time}</p>
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-indigo-800 uppercase">Koostisosad:</h4>
+                                            <ul className="text-xs text-indigo-900 list-disc list-inside">
+                                                {recipe.ingredients.map((ing, i) => <li key={i}>{ing}</li>)}
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-indigo-800 uppercase">Valmistamine:</h4>
+                                            <ol className="text-xs text-indigo-900 list-decimal list-inside space-y-1">
+                                                {recipe.steps.map((step, i) => <li key={i}>{step}</li>)}
+                                            </ol>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === 'share' && (
+                            <div>
+                                <h2 className="font-semibold text-lg mb-2">Naabrite Toidujagamine</h2>
+                                <p className="text-xs text-slate-500 mb-4">Anni üleliigne toit ära või leia head paremat lähedalt.</p>
+                                <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-center">
+                                    <p className="text-sm font-medium text-emerald-800 mb-2">Sul pole aktiivseid jagamisi.</p>
+                                    <button className="bg-emerald-600 text-white text-xs px-3 py-2 rounded-lg font-medium">
+                                        + Jaga toitu naabriga
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Alumine navigatsioon */}
+                    <nav className="fixed bottom-0 max-w-md w-full bg-white border-t border-slate-200 flex justify-around p-3 shadow-lg">
+                        <button 
+                            onClick={() => setActiveTab('fridge')} 
+                            className={`text-xs font-medium ${activeTab === 'fridge' ? 'text-emerald-600' : 'text-slate-500'}`}
+                        >
+                            🥬 Külmkapp
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('recipes')} 
+                            className={`text-xs font-medium ${activeTab === 'recipes' ? 'text-emerald-600' : 'text-slate-500'}`}
+                        >
+                            🍳 AI Retseptid
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('share')} 
+                            className={`text-xs font-medium ${activeTab === 'share' ? 'text-emerald-600' : 'text-slate-500'}`}
+                        >
+                            🤝 Toidujagamine
+                        </button>
+                    </nav>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
